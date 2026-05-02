@@ -1,0 +1,2 @@
+class HabitNotFound(Exception):
+    pass
