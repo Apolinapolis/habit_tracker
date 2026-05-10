@@ -1,5 +1,4 @@
 import pytest
-import app.service as serv
 import app.repository as repo
 
 
@@ -11,8 +10,7 @@ from app.schemas import HabitCreate
 
 @pytest.fixture(autouse=True)
 def reset_state():
-    repo.habits.clear()
-    serv.current_id = 1
+    repo.clear_all()
 
 
 
