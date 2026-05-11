@@ -1,5 +1,25 @@
 from app.db import SessionLocal
-from app.models_db import HabitDB
+from app.models_db import HabitDB, UserDB
+
+
+def create_user(username:str, hashed_password:str):
+    db = SessionLocal()
+    try:
+        user = UserDB(username=username, hashed_password=hashed_password)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+    finally:
+        db.close()
+
+def get_user_by_username(username:str):
+    db = SessionLocal()
+    try:
+        return db.query(UserDB).filter(UserDB.username == username).first()
+    finally:
+        db.close()
+
 
 def add_habit(habit):
     db = SessionLocal()

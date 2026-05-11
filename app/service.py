@@ -1,6 +1,16 @@
 from app.exceptions import HabitNotFound
 import app.repository as repo
+from app.models_db import UserDB
+from app.schemas import UserResponse
+from app.security import hash_password
 
+#TODO refactor
+def register_user(user_create:UserDB)->UserResponse:
+    if repo.get_user_by_username(user_create.username):
+        raise ValueError('user alredy exist')
+    hash_pass = hash_password(user_create.hashed_password)
+    repo.create_user(user_create.username, hash_pass)
+    return f'user {user_create.username} successfuly created'
 
 
 def create_habit(new_habit):
