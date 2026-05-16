@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.exceptions import HabitNotFound
-from app.schemas import HabitCreate, HabitResponse, HabitUpdate
+from app.exceptions import InvalidCredentials
+from app.schemas import HabitCreate, HabitResponse, HabitUpdate, Token, UserCreate
 import app.service as service
 
 
@@ -27,3 +27,10 @@ def delete_habit(habit_id:int):
 @router.patch('/habits/{habit_id}', response_model=HabitResponse)
 def update_habit(habit_id:int, habit_update:HabitUpdate):
     return service.update_habit_service(habit_id, habit_update)
+
+@router.post('/login', response_model=Token)
+def login(user:UserCreate):
+    try:
+        return service.login_user(user)
+    except InvalidCredentials:
+        raise HTTPException(status_code=401, detail='invalid credentials')

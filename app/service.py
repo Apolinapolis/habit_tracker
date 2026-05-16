@@ -1,17 +1,28 @@
-from app.exceptions import HabitNotFound
 import app.repository as repo
-from app.models_db import UserDB
-from app.schemas import UserResponse
-from app.security import hash_password
+from app.security import hash_password, verify_password, create_access_token
+from app.schemas import UserResponse, UserCreate, Token
+from app.exceptions import HabitNotFound, UserAlreadyExists, InvalidCredentials
 
-#TODO refactor
-def register_user(user_create:UserDB)->UserResponse:
+
+
+def register_user(user_create:UserCreate) -> UserResponse:
     if repo.get_user_by_username(user_create.username):
-        raise ValueError('user alredy exist')
-    hash_pass = hash_password(user_create.hashed_password)
-    repo.create_user(user_create.username, hash_pass)
-    return f'user {user_create.username} successfuly created'
+        raise UserAlreadyExists('user already exists')
+    hashed_password = hash_password(user_create.password)
+    user = repo.create_user(username=user_create.username, hashed_password=hashed_password)
+    return UserResponse(id=user.id, username=user.username)
 
+def login_user(user:UserCreate) -> Token:
+    db_user = repo.get_user_by_username(user.username)
+
+    if not db_user:
+        raise InvalidCredentials('invalid credentials')
+
+    if not verify_password(user.password, db_user.hashed_password):
+        raise InvalidCredentials()
+
+    token = create_access_token({"sub": user.username})
+    return Token(access_token=token, token_type="bearer")
 
 def create_habit(new_habit):
     if not new_habit.title:
