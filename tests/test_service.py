@@ -1,10 +1,10 @@
 import pytest
-import app.repository as repo
+import app.repositories.user_repository as repo
 
 
 from app.exceptions import HabitNotFound
 from app.service import create_habit, list_habits, get_habit
-from app.schemas import HabitCreate
+from app.schemas.user import HabitCreate
 
 
 

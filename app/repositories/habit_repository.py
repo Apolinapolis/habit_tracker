@@ -1,24 +1,5 @@
 from app.db import SessionLocal
-from app.models_db import HabitDB, UserDB
-
-
-def create_user(username:str, hashed_password:str):
-    db = SessionLocal()
-    try:
-        user = UserDB(username=username, hashed_password=hashed_password)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
-    finally:
-        db.close()
-
-def get_user_by_username(username:str):
-    db = SessionLocal()
-    try:
-        return db.query(UserDB).filter(UserDB.username == username).first()
-    finally:
-        db.close()
+from app.models.db_models import HabitDB
 
 
 def add_habit(habit):
@@ -32,6 +13,7 @@ def add_habit(habit):
     finally:
         db.close()
 
+
 def get_all():
     db = SessionLocal()
     try:
@@ -40,13 +22,15 @@ def get_all():
     finally:
         db.close()
 
-def get_by_id(habit_id:int):
+
+def get_by_id(habit_id: int):
     db = SessionLocal()
     try:
         result = db.query(HabitDB).filter(HabitDB.id == habit_id).first()
         return result
     finally:
         db.close()
+
 
 def update(habit):
     db = SessionLocal()
@@ -62,6 +46,7 @@ def update(habit):
     finally:
         db.close()
 
+
 def delete_by_id(habit_id: int):
     db = SessionLocal()
     try:
@@ -73,6 +58,7 @@ def delete_by_id(habit_id: int):
         return result
     finally:
         db.close()
+
 
 def clear_all():
     db = SessionLocal()
