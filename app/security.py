@@ -1,18 +1,36 @@
 from app.auth_config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta, UTC
 from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt, JWTError
+
+from app.exceptions import InvalidCredentials
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-def hash_password(password:str):
+
+def hash_password(password: str):
     return pwd_context.hash(password)
 
-def verify_password(plain_password:str, hashed_password:str)->bool:
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_access_token(data:dict) -> str:
+
+def create_access_token(data: dict) -> str:
     payload = data.copy()
     expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload['exp'] = expire
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)  # file for review
+
+
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get('sub')
+        if username is None:
+            raise InvalidCredentials()
+        return username
+    except JWTError:
+        raise InvalidCredentials()
