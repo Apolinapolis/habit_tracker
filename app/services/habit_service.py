@@ -2,13 +2,13 @@ import app.repositories.habit_repository as repo
 from app.exceptions import HabitNotFound
 
 
-def create_habit(new_habit):
+def create_habit(new_habit, current_user):
     if not new_habit.title:
         raise ValueError('title required')
-    return repo.add_habit(new_habit)
+    return repo.add_habit(new_habit, current_user)
 
-def list_habits():
-    return repo.get_all()
+def list_habits(current_user):
+    return repo.get_all(current_user.id)
 
 def get_habit(habit_id:int):
     habit = repo.get_by_id(habit_id)

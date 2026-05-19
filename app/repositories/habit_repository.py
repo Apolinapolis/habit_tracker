@@ -2,10 +2,10 @@ from app.db import SessionLocal
 from app.models.db_models import HabitDB
 
 
-def add_habit(habit):
+def add_habit(habit, current_user):
     db = SessionLocal()
     try:
-        db_habit = HabitDB(title=habit.title, description=habit.description)
+        db_habit = HabitDB(title=habit.title, description=habit.description, owner_id=current_user.id)
         db.add(db_habit)
         db.commit()
         db.refresh(db_habit)
@@ -14,10 +14,10 @@ def add_habit(habit):
         db.close()
 
 
-def get_all():
+def get_all(current_user_id):
     db = SessionLocal()
     try:
-        result = db.query(HabitDB).all()
+        result = db.query(HabitDB).filter(HabitDB.owner_id == current_user_id).all()
         return result
     finally:
         db.close()

@@ -1,13 +1,14 @@
 import app.services.habit_service as service
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.schemas.habit import HabitCreate, HabitResponse, HabitUpdate
+from app.services.auth_service import get_current_user
 
 router = APIRouter()
 
 
 @router.post('/habits', response_model=HabitResponse)
-def add_habit(habit: HabitCreate):
-    return service.create_habit(habit)
+def add_habit(habit: HabitCreate, current_user = Depends(get_current_user)):
+    return service.create_habit(habit, current_user)
 
 
 @router.get('/habits/{habit_id}', response_model=HabitResponse)
@@ -16,11 +17,11 @@ def get_habit(habit_id: int):
 
 
 @router.get('/habits', response_model=list[HabitResponse])
-def get_habits():
-    return service.list_habits()
+def get_habits(current_user = Depends(get_current_user)):
+    return service.list_habits(current_user)
 
 
-@router.delete('/habits/{habit_id}') # not shuare
+@router.delete('/habits/{habit_id}') # not shure
 def delete_habit(habit_id: int):
     service.delete_habit(habit_id)
     return {'status': "deleted"}
