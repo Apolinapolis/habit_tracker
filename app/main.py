@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from app.api.habits import router as habits_router
+from app.api.habits_route import router as habits_router
 from app.api.auth import router as auth_router
 from app.exceptions import HabitNotFound
 
