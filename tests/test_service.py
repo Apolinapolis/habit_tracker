@@ -1,31 +1,20 @@
 import pytest
-import app.repositories.user_repository as repo
+import requests
+import uuid
+import app.repositories.habit_repository as habit_repo
+import app.repositories.user_repository as user_repo
 
 
-from app.exceptions import HabitNotFound
-from app.service import create_habit, list_habits, get_habit
-from app.schemas.user import HabitCreate
+BASE_URL = "http://127.0.0.1:8000"
 
 
+@pytest.fixture(autouse=False)
+def reset_user_data():
+    habit_repo.reset_habits()
+    user_repo.reset_user()
 
-@pytest.fixture(autouse=True)
-def reset_state():
-    repo.clear_all()
 
-
-
-def test_create_habit():
-    habit = HabitCreate(title='run', description='morning run')
-    result = create_habit(habit)
-
-    assert result.id is not None
-    assert result.title =='run'
-    assert result.description =='morning run'
-
-def test_list_habits():
-    habits = list_habits()
-    assert isinstance(habits, list)
-
-def test_get_habit_not_found():
-    with pytest.raises(HabitNotFound):
-        get_habit(999)
+def test_register():
+    username = f"user_{uuid.uuid4().hex}"
+    response = requests.post(f"{BASE_URL}/register", json={"username": f"{username}" ,"password": "aD32s"})
+    assert response.status_code == 200

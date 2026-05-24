@@ -20,3 +20,12 @@ def get_user_by_username(username: str):
         return db.query(UserDB).filter(UserDB.username == username).first()
     finally:
         db.close()
+
+
+def reset_user():
+    db = SessionLocal()
+    try:
+        db.query(UserDB).delete()
+        db.commit()
+    finally:
+        db.close()

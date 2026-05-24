@@ -59,7 +59,7 @@ def delete_by_id(habit_id: int, current_user_id):
         db.close()
 
 
-def reset():
+def reset_habits():
     db = SessionLocal()
     try:
         db.query(HabitDB).delete()
