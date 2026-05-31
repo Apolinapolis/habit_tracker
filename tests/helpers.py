@@ -35,3 +35,6 @@ def create_habit(token, payload):
 def get_habits(token):
     headers = get_auth_headers(token)
     return api_client.get('/habits', headers=headers)
+
+def build_habit_payload(title:str='smoke tree', description:str='enjoy every moment'):
+    return {"title": title, "description": description}

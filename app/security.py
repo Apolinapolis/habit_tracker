@@ -3,7 +3,6 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta, UTC
 from passlib.context import CryptContext
 from jose import jwt, JWTError
-
 from app.exceptions import InvalidCredentials
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -31,6 +30,14 @@ def decode_access_token(token: str):
         username = payload.get('sub')
         if username is None:
             raise InvalidCredentials()
+            # raise HTTPException(
+            #     status_code=401,
+            #     detail="Invalid credentials"
+            # )
         return username
     except JWTError:
         raise InvalidCredentials()
+        # raise HTTPException(
+        #     status_code=401,
+        #     detail="Invalid credentials"
+        # )
