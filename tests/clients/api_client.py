@@ -1,4 +1,5 @@
 import requests
+
 from tests.settings import BASE_URL
 
 
@@ -11,7 +12,7 @@ class APIClient:
         return requests.get(f"{BASE_URL}{path}", timeout=5, **kwargs)
 
     def patch(self, path, **kwargs):
-        return requests.patch(f"{BASE_URL}{path}",  timeout=5, **kwargs)
+        return requests.patch(f"{BASE_URL}{path}", timeout=5, **kwargs)
 
     def delete(self, path, **kwargs):
         return requests.delete(f"{BASE_URL}{path}", timeout=5, **kwargs)

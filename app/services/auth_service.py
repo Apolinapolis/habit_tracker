@@ -1,15 +1,24 @@
-import app.repositories.user_repository as repo
-from app.exceptions import UserAlreadyExists, InvalidCredentials
-from app.schemas.user import UserResponse, UserCreate, Token
-from app.security import hash_password, verify_password, create_access_token, decode_access_token, oauth2_scheme
 from fastapi import Depends
+
+import app.repositories.user_repository as repo
+from app.exceptions import InvalidCredentials, UserAlreadyExists
+from app.schemas.user import Token, UserCreate, UserResponse
+from app.security import (
+    create_access_token,
+    decode_access_token,
+    hash_password,
+    oauth2_scheme,
+    verify_password,
+)
 
 
 def register_user(user_create: UserCreate) -> UserResponse:
     if repo.get_user_by_username(user_create.username):
-        raise UserAlreadyExists('user already exists')
+        raise UserAlreadyExists("user already exists")
     hashed_password = hash_password(user_create.password)
-    user = repo.create_user(username=user_create.username, hashed_password=hashed_password)
+    user = repo.create_user(
+        username=user_create.username, hashed_password=hashed_password
+    )
     return UserResponse(id=user.id, username=user.username)
 
 

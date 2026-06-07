@@ -6,3 +6,13 @@ test-server:
 
 test:
 	pytest
+
+format:
+	black .
+
+lint:
+	ruff check .
+
+check:
+	ruff check .
+	pytest
