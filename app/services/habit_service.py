@@ -28,7 +28,6 @@ def update_habit(habit_id:int, habit_update:HabitUpdate, current_user:UserDB):
     habit = repo.get_by_id(habit_id, current_user.id)
     if not habit:
         raise HabitNotFound()
-
     if habit_update.title is not None:
         habit.title = habit_update.title
     if habit_update.description is not None:

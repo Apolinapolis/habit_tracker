@@ -1,4 +1,6 @@
 import uuid
+
+from app.schemas.user import UserResponse
 from tests.clients.api_client import api_client
 from tests.settings import DEFAULT_PASSWORD
 
@@ -28,13 +30,24 @@ def create_user_get_token():
 
 
 # HABIT
-def create_habit(token, payload):
-    headers = get_auth_headers(token)
-    return api_client.post('/habits', json=payload, headers=headers)
+def create_habit(token, payload=None):
+    if payload is None:
+        payload = build_habit_payload()
+    return api_client.post('/habits', json=payload, headers=get_auth_headers(token))
 
 def get_habits(token):
-    headers = get_auth_headers(token)
-    return api_client.get('/habits', headers=headers)
+    return api_client.get('/habits', headers=get_auth_headers(token))
+
+def get_habit_by_id(token:str, habit_id:str):
+    return api_client.get(f'/habits/{habit_id}', headers=get_auth_headers(token))
 
 def build_habit_payload(title:str='smoke tree', description:str='enjoy every moment'):
     return {"title": title, "description": description}
+
+def delete_habit(token, habit_id:str):
+    return api_client.delete(f'/habits/{habit_id}', headers=get_auth_headers(token))
+
+def update_habit(token:str, habit_id:str, payload=None):
+    if payload is None:
+        payload = build_habit_payload('updated_title', 'updated_description')
+    return api_client.patch(f'/habits/{habit_id}', headers=get_auth_headers(token), json=payload)
