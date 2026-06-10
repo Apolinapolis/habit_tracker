@@ -5,7 +5,6 @@ from tests.helpers import (
     create_habit,
     create_user_get_token,
     delete_habit,
-    get_auth_headers,
     get_habit_by_id,
     get_habits,
     update_habit,
@@ -26,7 +25,7 @@ def test_create_habit_authenticated():
 def test_get_habits_authenticated():
     token = create_user_get_token()
     payload = build_habit_payload()
-    temp = create_habit(token, payload)
+    create_habit(token, payload)
     response = get_habits(token)
     data = response.json()
     assert response.status_code == 200
@@ -71,11 +70,11 @@ def test_get_habit_by_id():
 
 
 def test_cannot_get_foreign_habit():
-    created_habit = create_habit(create_user_get_token()).json()
-    created_habit_id = created_habit["id"]
-    response = api_client.get(
-        f"/habits/{created_habit_id}", headers=get_auth_headers(create_user_get_token())
-    )
+    token = create_user_get_token()
+    other_token = create_user_get_token()
+    created_habit = create_habit(token)
+    created_habit_id = created_habit.json()["id"]
+    response = get_habit_by_id(other_token,created_habit_id)
     assert response.status_code == 404
     assert response.json()["detail"] == "habit not found"
 
@@ -86,12 +85,7 @@ def test_delete_habit():
     response = delete_habit(token, habit_id)
     assert response.status_code == 200
     assert response.json() == {"status": "deleted"}
-    assert (
-        api_client.get(
-            f"/habits/{habit_id}", headers=get_auth_headers(token)
-        ).status_code
-        == 404
-    )
+    assert get_habit_by_id(token, habit_id).status_code == 404
 
 
 def test_delete_foreign_habit():
@@ -109,10 +103,13 @@ def test_update_habit():
     habit_id = create_habit(token).json()["id"]
     update = {"title": "test_title", "description": "test_description"}
     response = update_habit(token, habit_id, update)
+    habit = get_habit_by_id(token,habit_id).json()
     assert response.status_code == 200
     assert response.json()["id"] == habit_id
-    assert response.json()["title"] == "test_title"
-    assert response.json()["description"] == "test_description"
+    assert response.json()["title"] == update['title']
+    assert response.json()["description"] == update['description']
+    assert habit['title'] == update['title']
+    assert habit['description'] == update['description']
 
 
 def test_update_foreign_habit():
@@ -128,6 +125,56 @@ def test_update_foreign_habit():
     assert target_habit["description"] != "foreign"
 
 
+def test_update_only_title():
+    token = create_user_get_token()
+    current_habit = create_habit(token)
+    current_habit_id = current_habit.json()['id']
+    payload = {'title':'boom'}
+    response = update_habit(token,current_habit_id,payload)
+    habit = get_habit_by_id(token,current_habit_id)
+    assert response.status_code == 200
+    assert habit.json()['title'] == payload['title']
+    assert habit.json()['description'] == current_habit.json()['description']
+
+
+def test_update_only_description():
+    token = create_user_get_token()
+    current_habit = create_habit(token)
+    current_habit_id = current_habit.json()['id']
+    payload = {'description':'  ops'}
+    response = update_habit(token,current_habit_id,payload)
+    habit = get_habit_by_id(token,current_habit_id)
+    assert response.status_code == 200
+    assert habit.json()['title'] == current_habit.json()['title']
+    assert habit.json()['description'] == payload['description']
+
+
+def test_update_title_null_keeps_original_value():
+    token = create_user_get_token()
+    current_habit = create_habit(token)
+    current_habit_id = current_habit.json()['id']
+    payload = {'title': None}
+    response = update_habit(token, current_habit_id, payload)
+    habit = get_habit_by_id(token, current_habit_id)
+    assert response.status_code == 200
+    assert habit.json()['title'] == current_habit.json()['title']
+    assert habit.json()['description'] == current_habit.json()['description']
+
+
+def test_update_habit_trim_payload():
+    token = create_user_get_token()
+    current_habit = create_habit(token)
+    current_habit_id = current_habit.json()['id']
+    payload = {'title': '  test  ', 'description': ' test  '}
+    response = update_habit(token, current_habit_id, payload)
+    habit = get_habit_by_id(token, current_habit_id)
+    assert response.status_code == 200
+    assert response.json()['title'] == 'test'
+    assert response.json()['description'] == 'test'
+    assert habit.json()['title'] == 'test'
+    assert habit.json()['description'] == 'test'
+
+
 @pytest.mark.parametrize('payload',
                          [{}, {"description": "test"}, {'title':''}, {'title':'  '}, {'title':None}],
                          ids=["empty_payload",'"missing_title"','empty_title', 'space_title','null_title'])
@@ -135,3 +182,18 @@ def test_create_habit_invalid_payload(payload:dict):
     token = create_user_get_token()
     response = create_habit(token, payload)
     assert response.status_code == 422
+
+
+@pytest.mark.parametrize('payload',[{'title':''}, {'title':'  '}, {'title':'\n'}, {"title": "\n"}, {"title": "\r"}],
+                         ids=['empty', 'space', 'tab', 'new_str', 'return'])
+def test_update_habit_invalid_title(payload):
+    token = create_user_get_token()
+    target_habit_id = create_habit(token).json()['id']
+    response = update_habit(token, target_habit_id, payload)
+    assert response.status_code == 422
+
+# {}
+# {"description": ""}
+# {"description": " "}
+# {"description": None}
+# {"title": None}

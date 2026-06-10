@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 
 
 class HabitCreate(BaseModel):
@@ -8,20 +8,45 @@ class HabitCreate(BaseModel):
     @field_validator('title')
     @classmethod
     def validate_title(cls,value):
-        if not value.strip():
+        value = value.strip()
+        if not value:
             raise ValueError('title can not be empty')
         return value
+
+    @field_validator('description')
+    @classmethod
+    def normalize_description(cls, value):
+        if value is None:
+            return value
+        return value.strip()
 
 
 class HabitUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
 
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value):
+        if value is None:
+            return value
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError('title can not be empty')
+        return value
+
+    @field_validator('description')
+    @classmethod
+    def normalize_description(cls, value):
+        if value is None:
+            return value
+        return value.strip()
 
 class HabitResponse(BaseModel):
     id: int
     title: str
     description: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

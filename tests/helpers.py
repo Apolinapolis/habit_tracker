@@ -14,7 +14,7 @@ def register_user(username=None, password=DEFAULT_PASSWORD):
     return response, username, password
 
 
-def login_user(username, password):
+def login_user(username, password=DEFAULT_PASSWORD):
     return api_client.post("/login", data={"username": username, "password": password})
 
 
