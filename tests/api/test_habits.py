@@ -236,3 +236,4 @@ def test_not_exist_habit(action):
     token = create_user_get_token()
     response = action(token,'99999999999')
     assert response.status_code == 404
+    assert response.json() == {"detail": "habit not found"}
