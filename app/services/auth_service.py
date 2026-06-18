@@ -16,9 +16,7 @@ def register_user(user_create: UserCreate) -> UserResponse:
     if repo.get_user_by_username(user_create.username):
         raise UserAlreadyExists("user already exists")
     hashed_password = hash_password(user_create.password)
-    user = repo.create_user(
-        username=user_create.username, hashed_password=hashed_password
-    )
+    user = repo.create_user(username=user_create.username, hashed_password=hashed_password)
     return UserResponse(id=user.id, username=user.username)
 
 

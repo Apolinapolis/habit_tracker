@@ -8,10 +8,13 @@ test:
 	pytest
 
 format:
-	black .
+	ruff format .
 
 lint:
 	ruff check .
+
+fix:
+	ruff check . --fix
 
 check:
 	ruff check .

@@ -4,7 +4,6 @@ from tests.settings import BASE_URL
 
 
 class APIClient:
-
     def post(self, path, **kwargs):
         return requests.post(f"{BASE_URL}{path}", timeout=5, **kwargs)
 

@@ -1,5 +1,5 @@
 from tests.helpers import login_user, register_user
-import pytest
+
 
 def test_success_register():
     response, username, password = register_user()
@@ -27,19 +27,19 @@ def test_successful_login():
 
 def test_login_invalid_password():
     _, username, _ = register_user()
-    response = login_user(username, 'wrong password')
+    response = login_user(username, "wrong password")
     assert response.status_code == 401
-    assert response.json()['detail'] == 'invalid credentials'
+    assert response.json()["detail"] == "invalid credentials"
 
 
 def test_login_unknown_user():
-    response = login_user('unknown')
+    response = login_user("unknown")
     assert response.status_code == 401
-    assert response.json()['detail'] == 'invalid credentials'
+    assert response.json()["detail"] == "invalid credentials"
 
 
 def test_login_unknown_user_when_other_user_exist():
     register_user()
-    response = login_user('unknown')
+    response = login_user("unknown")
     assert response.status_code == 401
-    assert response.json()['detail'] == 'invalid credentials'
+    assert response.json()["detail"] == "invalid credentials"

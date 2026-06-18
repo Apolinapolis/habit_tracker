@@ -8,9 +8,7 @@ from tests.settings import DEFAULT_PASSWORD
 def register_user(username=None, password=DEFAULT_PASSWORD):
     if username is None:
         username = f"user_{uuid.uuid4().hex}"
-    response = api_client.post(
-        "/register", json={"username": username, "password": password}
-    )
+    response = api_client.post("/register", json={"username": username, "password": password})
     return response, username, password
 
 
@@ -48,9 +46,7 @@ def get_habit_by_id(token: str, habit_id: str):
     return api_client.get(f"/habits/{habit_id}", headers=get_auth_headers(token))
 
 
-def build_habit_payload(
-    title: str = "smoke tree", description: str = "enjoy every moment"
-):
+def build_habit_payload(title: str = "smoke tree", description: str = "enjoy every moment"):
     return {"title": title, "description": description}
 
 
@@ -61,6 +57,4 @@ def delete_habit(token, habit_id: str):
 def update_habit(token: str, habit_id: str, payload=None):
     if payload is None:
         payload = build_habit_payload("updated_title", "updated_description")
-    return api_client.patch(
-        f"/habits/{habit_id}", headers=get_auth_headers(token), json=payload
-    )
+    return api_client.patch(f"/habits/{habit_id}", headers=get_auth_headers(token), json=payload)

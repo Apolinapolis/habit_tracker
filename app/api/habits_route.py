@@ -29,7 +29,5 @@ def delete_habit(habit_id: int, current_user=Depends(get_current_user)):
 
 
 @router.patch("/habits/{habit_id}", response_model=HabitResponse)
-def update_habit(
-    habit_id: int, habit_update: HabitUpdate, current_user=Depends(get_current_user)
-):
+def update_habit(habit_id: int, habit_update: HabitUpdate, current_user=Depends(get_current_user)):
     return service.update_habit(habit_id, habit_update, current_user)

@@ -11,9 +11,7 @@ router = APIRouter()
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
-        return service.login_user(
-            username=form_data.username, password=form_data.password
-        )
+        return service.login_user(username=form_data.username, password=form_data.password)
     except InvalidCredentials:
         raise HTTPException(status_code=401, detail="invalid credentials")
 

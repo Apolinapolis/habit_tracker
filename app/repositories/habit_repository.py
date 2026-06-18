@@ -5,9 +5,7 @@ from app.models.db_models import HabitDB
 def add_habit(habit, current_user_id):
     db = SessionLocal()
     try:
-        db_habit = HabitDB(
-            title=habit.title, description=habit.description, owner_id=current_user_id
-        )
+        db_habit = HabitDB(title=habit.title, description=habit.description, owner_id=current_user_id)
         db.add(db_habit)
         db.commit()
         db.refresh(db_habit)
@@ -28,11 +26,7 @@ def get_all(current_user_id):
 def get_by_id(habit_id: int, current_user_id):
     db = SessionLocal()
     try:
-        return (
-            db.query(HabitDB)
-            .filter(HabitDB.id == habit_id, HabitDB.owner_id == current_user_id)
-            .first()
-        )
+        return db.query(HabitDB).filter(HabitDB.id == habit_id, HabitDB.owner_id == current_user_id).first()
     finally:
         db.close()
 
@@ -40,11 +34,7 @@ def get_by_id(habit_id: int, current_user_id):
 def update(habit, current_user_id):
     db = SessionLocal()
     try:
-        target = (
-            db.query(HabitDB)
-            .filter(HabitDB.id == habit.id, HabitDB.owner_id == current_user_id)
-            .first()
-        )
+        target = db.query(HabitDB).filter(HabitDB.id == habit.id, HabitDB.owner_id == current_user_id).first()
         if not target:
             return None
         target.title = habit.title
@@ -59,11 +49,7 @@ def update(habit, current_user_id):
 def delete_by_id(habit_id: int, current_user_id):
     db = SessionLocal()
     try:
-        result = (
-            db.query(HabitDB)
-            .filter(HabitDB.id == habit_id, HabitDB.owner_id == current_user_id)
-            .first()
-        )
+        result = db.query(HabitDB).filter(HabitDB.id == habit_id, HabitDB.owner_id == current_user_id).first()
         if not result:
             return None
         db.delete(result)
