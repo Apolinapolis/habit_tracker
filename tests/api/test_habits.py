@@ -141,12 +141,24 @@ def test_update_only_description():
     token = create_user_get_token()
     current_habit = create_habit(token)
     current_habit_id = current_habit.json()['id']
-    payload = {'description':'  ops'}
+    payload = {'description':'ops'}
     response = update_habit(token,current_habit_id,payload)
     habit = get_habit_by_id(token,current_habit_id)
     assert response.status_code == 200
     assert habit.json()['title'] == current_habit.json()['title']
     assert habit.json()['description'] == payload['description']
+
+
+def test_upd_none_description_no_change():
+    token = create_user_get_token()
+    original_habit = create_habit(token).json()
+    original_habit_id = original_habit['id']
+    payload = {'description':None}
+    response = update_habit(token,original_habit_id,payload)
+    after_upd_habit = get_habit_by_id(token,original_habit_id).json()
+    assert response.status_code == 200
+    assert after_upd_habit['title'] == original_habit['title']
+    assert after_upd_habit['description'] == original_habit['description']
 
 
 def test_update_title_null_keeps_original_value():
@@ -184,16 +196,43 @@ def test_create_habit_invalid_payload(payload:dict):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize('payload',[{'title':''}, {'title':'  '}, {'title':'\n'}, {"title": "\n"}, {"title": "\r"}],
-                         ids=['empty', 'space', 'tab', 'new_str', 'return'])
-def test_update_habit_invalid_title(payload):
+
+@pytest.mark.parametrize('payload',
+                         [{'title':''},{'title':'  '},{'title':'\t'},{"title": "\n"},{"title": "\r"}],
+                         ids=['empty str', 'space', 'tab', 'new_str', 'return'])
+def test_upd_habit_invalid_title(payload):
+    token = create_user_get_token()
+    original_habit = create_habit(token).json()
+    original_habit_id = original_habit['id']
+    original_habit_title = original_habit['title']
+    response = update_habit(token, original_habit_id, payload)
+    after_upd_habit = get_habit_by_id(token,original_habit_id).json()
+    assert response.status_code == 422
+    assert after_upd_habit['title'] == original_habit_title
+
+
+@pytest.mark.parametrize('payload', [{}, {"title": None}], ids=['empty dict', 'None'])
+def test_no_upd_habit_edge_cases(payload):
     token = create_user_get_token()
     target_habit_id = create_habit(token).json()['id']
     response = update_habit(token, target_habit_id, payload)
-    assert response.status_code == 422
+    after_upd_habit = get_habit_by_id(token,target_habit_id).json()
+    assert response.status_code == 200
+    assert after_upd_habit['title'] == response.json()['title']
 
-# {}
-# {"description": ""}
-# {"description": " "}
-# {"description": None}
-# {"title": None}
+
+@pytest.mark.parametrize('payload', [{"description": ""}, {"description": "  "}], ids=['empty string', 'spaces',])
+def test_upd_habit_by_empty_str(payload):
+    token = create_user_get_token()
+    original_habit_id = create_habit(token).json()['id']
+    response = update_habit(token, original_habit_id, payload)
+    after_upd_habit = get_habit_by_id(token,original_habit_id).json()
+    assert response.status_code == 200
+    assert after_upd_habit['description'] == ''
+
+
+@pytest.mark.parametrize('action', [get_habit_by_id,delete_habit,update_habit],ids=['GET','DEL','UPDATE'])
+def test_not_exist_habit(action):
+    token = create_user_get_token()
+    response = action(token,'99999999999')
+    assert response.status_code == 404
