@@ -23,7 +23,7 @@ def create_access_token(data: dict) -> str:
     payload = data.copy()
     expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload["exp"] = expire
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)  # file for review
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def decode_access_token(token: str):
@@ -32,14 +32,6 @@ def decode_access_token(token: str):
         username = payload.get("sub")
         if username is None:
             raise InvalidCredentials()
-            # raise HTTPException(
-            #     status_code=401,
-            #     detail="Invalid credentials"
-            # )
         return username
     except JWTError:
         raise InvalidCredentials()
-        # raise HTTPException(
-        #     status_code=401,
-        #     detail="Invalid credentials"
-        # )

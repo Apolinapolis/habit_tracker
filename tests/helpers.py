@@ -1,6 +1,7 @@
 import uuid
 
 from tests.clients.api_client import api_client
+from tests.clients.test_client import client
 from tests.settings import DEFAULT_PASSWORD
 
 
@@ -8,7 +9,7 @@ from tests.settings import DEFAULT_PASSWORD
 def register_user(username=None, password=DEFAULT_PASSWORD):
     if username is None:
         username = f"user_{uuid.uuid4().hex}"
-    response = api_client.post("/register", json={"username": username, "password": password})
+    response = client.post("/register", json={"username": username, "password": password})
     return response, username, password
 
 
