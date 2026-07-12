@@ -1,11 +1,11 @@
-import pytest
-import app.services.auth_service as service
-
 from types import SimpleNamespace
 from unittest.mock import Mock
+
+import pytest
+
+import app.services.auth_service as service
 from app.exceptions import InvalidCredentials, UserAlreadyExists
 from app.schemas.user import UserCreate
-
 
 
 def test_register_duplicate_user(monkeypatch):

@@ -1,0 +1,4 @@
+ - habit repo - db close for all
+ - fixtures like get token (test_create_habit_invalid_payload)
+ - .env.test / pytest.ini / Makefile (3 source of DATABASE_URL)
+ - отступы между функциями и импортами через ruff

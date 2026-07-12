@@ -5,8 +5,6 @@ from app.schemas.habit import HabitCreate, HabitUpdate
 
 
 def create_habit(new_habit: HabitCreate, current_user: UserDB):
-    if not new_habit.title:
-        raise ValueError("title required")
     return repo.add_habit(new_habit, current_user.id)
 
 
