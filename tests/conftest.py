@@ -53,9 +53,37 @@ def token(user_payload_factory):
     response = api_client.login_user(**credentials)
     return response.json()["access_token"]
 
+@pytest.fixture
+def token_factory(user_payload_factory):
+    def create():
+        credentials = user_payload_factory()
+        api_client.register_user(**credentials)
+        response = api_client.login_user(**credentials)
+        return response.json()["access_token"]
+    return create
+
 
 @pytest.fixture
 def created_habit(token, habit_payload_factory):
     payload = habit_payload_factory()
-    response = api_client.create_habit(token, payload)
-    return response.json()
+    return api_client.create_habit(token, payload).json()
+
+from dataclasses import dataclass
+
+
+
+@dataclass
+class CreatedHabit:
+    token: str
+    habit: dict
+    response: dict
+
+
+@pytest.fixture
+def created_habit_factory(created_habit):
+    def create(token, habit_payload_factory):
+        payload = habit_payload_factory()
+        response = api_client.create_habit(token, payload)
+        data = response.json()
+        return CreatedHabit(token=token, habit=data, response=response)
+    return create

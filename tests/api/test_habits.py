@@ -1,5 +1,6 @@
 import pytest
 from tests.clients.api_client import api_client
+from tests.conftest import habit_payload_factory
 
 
 def test_create_habit_authenticated(token, habit_payload_factory):
@@ -12,54 +13,58 @@ def test_create_habit_authenticated(token, habit_payload_factory):
     assert data["description"] == payload["description"]
     assert data["id"] is not None
 
-def test_my_skills():
-    for i in range (1,101): print('bizone' if i % 2 == 0 and i % 7 == 0 else 'bi' if i % 2 == 0 else 'zone' if i % 7 == 0 else i )
 
-# def test_get_habits_authenticated():
-#     token = create_user_get_token()
-#     payload = build_habit_payload()
-#     create_habit(token, payload)
-#     response = get_habits(token)
-#     data = response.json()
-#     assert response.status_code == 200
-#     assert isinstance(data, list)
-#     assert len(data) == 1
-#     assert data[0]["title"] == payload["title"]
-#
-#
-# def test_create_habit_wo_token():
-#     response = api_client.post("/habits")
-#     data = response.json()
-#     assert response.status_code == 401
-#     assert data["detail"] == "Not authenticated"
-#
-#
-# def test_create_habit_with_invalid_token():
-#     response = create_habit("invalid")
-#     data = response.json()
-#     assert response.status_code == 401
-#     assert data["detail"] == "Invalid credentials"
-#
-#
-# def test_ownership_isolation():
-#     token_1 = create_user_get_token()
-#     token_2 = create_user_get_token()
-#     create_habit(token_1)
-#     response = get_habits(token_2)
-#     data = response.json()
-#     assert response.status_code == 200
-#     assert data == []
-#
-#
-# def test_get_habit_by_id():
-#     token = create_user_get_token()
-#     created_habit = create_habit(token).json()
-#     response = get_habit_by_id(token, created_habit["id"])
-#     data = response.json()
-#     assert response.status_code == 200
-#     assert data["id"] == created_habit["id"]
-#     assert data["title"] == created_habit["title"]
-#     assert data["description"] == created_habit["description"]
+def test_get_habits_authenticated(token, created_habit):
+    response = api_client.get_habits(token)
+    data = response.json()
+    habit = next((h for h in data if h['id'] == created_habit['id']),None)
+
+    assert habit is not None
+    assert response.status_code == 200
+    assert isinstance(data, list)
+    assert any(habit['id'] == created_habit['id'] for habit in data)
+    assert habit["title"] == created_habit["title"]
+    assert habit["description"] == created_habit["description"]
+
+
+def test_create_habit_requires_authentication():
+    response = api_client.post("/habits")
+    data = response.json()
+    assert response.status_code == 401
+    assert data["detail"] == "Not authenticated"
+
+
+def test_create_habit_with_invalid_token():
+    response = api_client.post("/habits", headers={"Authorization": "Bearer TEST.INVALID.TOKEN"})
+    data = response.json()
+    assert response.status_code == 401
+    assert data["detail"] == "Invalid credentials"
+
+
+def test_ownership_isolation(token_factory, habit_payload_factory):
+    token_1 = token_factory()
+    token_2 = token_factory()
+
+    create_response = api_client.create_habit(token_1, habit_payload_factory())
+    assert create_response.status_code == 200
+
+    response = api_client.get_habits(token_2)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data == []
+
+
+def test_get_habit_by_id(created_habit):
+    created_habit_data = created_habit
+
+    response = api_client.get_habit_by_id(created_habit_data['id'])
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["id"] == created_habit_data["id"]
+    assert data["title"] == created_habit_data["title"]
+    assert data["description"] == created_habit_data["description"]
 #
 #
 # def test_cannot_get_foreign_habit():
