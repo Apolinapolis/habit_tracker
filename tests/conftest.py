@@ -68,22 +68,16 @@ def created_habit(token, habit_payload_factory):
     payload = habit_payload_factory()
     return api_client.create_habit(token, payload).json()
 
-from dataclasses import dataclass
-
-
-
-@dataclass
-class CreatedHabit:
-    token: str
-    habit: dict
-    response: dict
-
 
 @pytest.fixture
-def created_habit_factory(created_habit):
-    def create(token, habit_payload_factory):
-        payload = habit_payload_factory()
-        response = api_client.create_habit(token, payload)
-        data = response.json()
-        return CreatedHabit(token=token, habit=data, response=response)
+def created_habit_factory(habit_payload_factory):
+    def create(token):
+        response = api_client.create_habit(token, habit_payload_factory())
+        return { 'token': token, 'data': response.json(), 'response': response }
+    return create
+
+@pytest.fixture
+def update_habit_payload_factory():
+    def create(title:str | None, description:str | None):
+        return {'title':title, 'description':description}
     return create
