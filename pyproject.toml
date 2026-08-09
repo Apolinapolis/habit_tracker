@@ -1,3 +1,32 @@
+[project]
+name = "habit-tracker"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "sqlalchemy",
+    "pydantic",
+    "python-dotenv",
+    "python-jose",
+    "passlib",
+    "psycopg2-binary>=2.9.12",
+    "python-multipart>=0.0.32",
+    "bcrypt<5",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-env",
+    "pytest-xdist",
+    "requests",
+    "httpx",
+    "ruff",
+    "pytest-asyncio>=1.4.0",
+]
+
 [tool.ruff]
 line-length = 120
 
