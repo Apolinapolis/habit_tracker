@@ -1,6 +1,6 @@
 import pytest
+
 from tests.clients.api_client import api_client
-from tests.conftest import habit_payload_factory, token, update_habit_factory
 
 
 def test_create_habit_authenticated(token, habit_payload_factory):
@@ -17,12 +17,12 @@ def test_create_habit_authenticated(token, habit_payload_factory):
 def test_get_habits_authenticated(token, created_habit):
     response = api_client.get_habits(token)
     data = response.json()
-    habit = next((h for h in data if h['id'] == created_habit['id']),None)
+    habit = next((h for h in data if h["id"] == created_habit["id"]), None)
 
     assert habit is not None
     assert response.status_code == 200
     assert isinstance(data, list)
-    assert any(habit['id'] == created_habit['id'] for habit in data)
+    assert any(habit["id"] == created_habit["id"] for habit in data)
     assert habit["title"] == created_habit["title"]
     assert habit["description"] == created_habit["description"]
 
@@ -57,9 +57,9 @@ def test_ownership_isolation(token_factory, habit_payload_factory):
 
 def test_get_habit_by_id(token, created_habit_factory):
     created = created_habit_factory(token)
-    habit = created['data']
+    habit = created["data"]
 
-    response = api_client.get_habit_by_id(token, habit['id'])
+    response = api_client.get_habit_by_id(token, habit["id"])
     assert response.status_code == 200
     data = response.json()
 
@@ -72,14 +72,14 @@ def test_cant_get_foreign_habit(token_factory, created_habit_factory):
     token_1 = token_factory()
     token_2 = token_factory()
     created = created_habit_factory(token_1)
-    response = api_client.get_habit_by_id(token_2, created['data']['id'])
+    response = api_client.get_habit_by_id(token_2, created["data"]["id"])
     assert response.status_code == 404
     assert response.json()["detail"] == "habit not found"
 
 
 def test_delete_habit(token, created_habit_factory):
     created = created_habit_factory(token)
-    habit_id = created['data']['id']
+    habit_id = created["data"]["id"]
 
     delete_response = api_client.delete_habit(token, habit_id)
     assert delete_response.status_code == 200
@@ -93,7 +93,7 @@ def test_delete_habit(token, created_habit_factory):
 def test_delete_foreign_habit(token_factory, created_habit_factory):
     token_1 = token_factory()
     token_2 = token_factory()
-    habit_id = created_habit_factory(token_1)['data']['id']
+    habit_id = created_habit_factory(token_1)["data"]["id"]
 
     delete_response = api_client.delete_habit(token_2, habit_id)
     assert delete_response.status_code == 404
@@ -101,13 +101,12 @@ def test_delete_foreign_habit(token_factory, created_habit_factory):
 
     get_response = api_client.get_habit_by_id(token_1, habit_id)
     assert get_response.status_code == 200
-    assert get_response.json()['id'] == habit_id
-
+    assert get_response.json()["id"] == habit_id
 
 
 def test_update_habit(token, created_habit_factory, update_habit_payload_factory):
-    habit_id = created_habit_factory(token)['data']['id']
-    update_payload = update_habit_payload_factory(title='updated title', description='updated description')
+    habit_id = created_habit_factory(token)["data"]["id"]
+    update_payload = update_habit_payload_factory(title="updated title", description="updated description")
 
     response = api_client.update_habit(token, habit_id, update_payload)
     assert response.status_code == 200
@@ -127,8 +126,8 @@ def test_update_foreign_habit(token_factory, created_habit_factory, update_habit
     token_1 = token_factory()
     token_2 = token_factory()
     created = created_habit_factory(token_1)
-    habit_id = created['data']['id']
-    update_payload = update_habit_payload_factory(title='updated title', description='updated description')
+    habit_id = created["data"]["id"]
+    update_payload = update_habit_payload_factory(title="updated title", description="updated description")
 
     response = api_client.update_habit(token_2, habit_id, update_payload)
     assert response.status_code == 404
@@ -136,13 +135,13 @@ def test_update_foreign_habit(token_factory, created_habit_factory, update_habit
     get_response = api_client.get_habit_by_id(token_1, habit_id)
     assert get_response.status_code == 200
     current_habit = get_response.json()
-    assert current_habit["title"] == created['data']['title']
-    assert current_habit["description"] == created['data']['description']
+    assert current_habit["title"] == created["data"]["title"]
+    assert current_habit["description"] == created["data"]["description"]
 
 
-def test_update_only_title(token, created_habit_factory): #parametrize
+def test_update_only_title(token, created_habit_factory):  # parametrize
     created = created_habit_factory(token)
-    habit_id = created['data']["id"]
+    habit_id = created["data"]["id"]
     payload = {"title": "boom"}
 
     response = api_client.update_habit(token, habit_id, payload)
@@ -155,12 +154,12 @@ def test_update_only_title(token, created_habit_factory): #parametrize
     assert get_response.status_code == 200
     habit = get_response.json()
     assert habit["title"] == payload["title"]
-    assert habit["description"] == created['data']["description"]
+    assert habit["description"] == created["data"]["description"]
 
 
-def test_update_only_description(token, created_habit_factory): #parametrize
+def test_update_only_description(token, created_habit_factory):  # parametrize
     created = created_habit_factory(token)
-    habit_id = created['data']["id"]
+    habit_id = created["data"]["id"]
     payload = {"description": "ops"}
 
     response = api_client.update_habit(token, habit_id, payload)
@@ -176,10 +175,9 @@ def test_update_only_description(token, created_habit_factory): #parametrize
     assert habit["description"] == payload["description"]
 
 
-
-def test_update_none_description_no_change(token, created_habit_factory): #parametrize
+def test_update_none_description_no_change(token, created_habit_factory):  # parametrize
     created = created_habit_factory(token)
-    habit_id = created['data']["id"]
+    habit_id = created["data"]["id"]
     payload = {"description": None}
 
     response = api_client.update_habit(token, habit_id, payload)
@@ -195,9 +193,9 @@ def test_update_none_description_no_change(token, created_habit_factory): #param
     assert habit["description"] == created["data"]["description"]
 
 
-def test_update_title_null_keeps_original_value(token, created_habit_factory): # parametrize
+def test_update_title_null_keeps_original_value(token, created_habit_factory):  # parametrize
     created = created_habit_factory(token)
-    habit_id = created['data']["id"]
+    habit_id = created["data"]["id"]
     payload = {"title": None}
 
     response = api_client.update_habit(token, habit_id, payload)
@@ -215,7 +213,7 @@ def test_update_title_null_keeps_original_value(token, created_habit_factory): #
 
 def test_update_habit_trim_payload(token, created_habit_factory):
     created = created_habit_factory(token)
-    habit_id = created['data']["id"]
+    habit_id = created["data"]["id"]
     payload = {"title": "  test  ", "description": " test  "}
     expected_title = payload["title"].strip()
     expected_description = payload["description"].strip()
@@ -255,7 +253,7 @@ def test_create_habit_invalid_payload(payload: dict, token):
 )
 def test_upd_habit_invalid_title(payload, token, created_habit_factory):
     created = created_habit_factory(token)
-    created_habit_id = created['data']["id"]
+    created_habit_id = created["data"]["id"]
 
     response = api_client.update_habit(token, created_habit_id, payload)
     assert response.status_code == 422
@@ -263,27 +261,33 @@ def test_upd_habit_invalid_title(payload, token, created_habit_factory):
     get_response = api_client.get_habit_by_id(token, created_habit_id)
     assert get_response.status_code == 200
 
-    assert get_response.json() == created['data']
+    assert get_response.json() == created["data"]
 
 
 @pytest.mark.parametrize("payload", [{}, {"title": None}], ids=["empty dict", "None"])
 def test_update_habit_empty_payload(payload, token, created_habit_factory):
     created = created_habit_factory(token)
-    created_habit_id = created['data']['id']
+    created_habit_id = created["data"]["id"]
 
     response = api_client.update_habit(token, created_habit_id, payload)
     assert response.status_code == 200
 
     get_response = api_client.get_habit_by_id(token, created_habit_id)
     assert get_response.status_code == 200
-    assert get_response.json() == created['data']
+    assert get_response.json() == created["data"]
 
 
-@pytest.mark.parametrize("payload, expected_description",
-                         [({"description": ""}, ''), ({"description": "  "},'')], ids=["empty string","spaces",])
+@pytest.mark.parametrize(
+    "payload, expected_description",
+    [({"description": ""}, ""), ({"description": "  "}, "")],
+    ids=[
+        "empty string",
+        "spaces",
+    ],
+)
 def test_upd_habit_by_empty_str(payload, expected_description, token, created_habit_factory):
     created = created_habit_factory(token)
-    habit_id = created['data']['id']
+    habit_id = created["data"]["id"]
 
     response = api_client.update_habit(token, habit_id, payload)
     assert response.status_code == 200
@@ -295,10 +299,15 @@ def test_upd_habit_by_empty_str(payload, expected_description, token, created_ha
     assert after_upd_habit["title"] == created["data"]["title"]
 
 
-@pytest.mark.parametrize("action",
-                         [lambda token: api_client.get_habit_by_id(token, '99999999'),
-                          lambda token: api_client.delete_habit(token, '99999999'),
-                          lambda token: api_client.update_habit(token, '99999999', {})], ids=["GET", "DEL", "UPDATE"])
+@pytest.mark.parametrize(
+    "action",
+    [
+        lambda token: api_client.get_habit_by_id(token, "99999999"),
+        lambda token: api_client.delete_habit(token, "99999999"),
+        lambda token: api_client.update_habit(token, "99999999", {}),
+    ],
+    ids=["GET", "DEL", "UPDATE"],
+)
 def test_not_exist_habit(action, token):
     response = action(token)
     assert response.status_code == 404

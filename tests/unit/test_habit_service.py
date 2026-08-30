@@ -121,7 +121,8 @@ def test_update_habit_not_found(user, existing_habit_factory, update_habit_facto
     ],
 )
 def test_update_habit_partial(
-    user, existing_habit_factory, updated_habit, expected_title, expected_description, monkeypatch):
+    user, existing_habit_factory, updated_habit, expected_title, expected_description, monkeypatch
+):
     # Получаем базовую привычку
     existing_habit = existing_habit_factory()
     # Заглушки

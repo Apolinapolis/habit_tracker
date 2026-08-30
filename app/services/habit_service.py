@@ -4,7 +4,7 @@ from app.models.db_models import UserDB
 from app.schemas.habit import HabitCreate, HabitUpdate
 
 
-def create_habit(new_habit:HabitCreate, current_user:UserDB):
+def create_habit(new_habit: HabitCreate, current_user: UserDB):
     return repo.add_habit(new_habit, current_user.id)
 
 
