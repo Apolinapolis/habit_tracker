@@ -1,19 +1,23 @@
+ENV_FILE ?= .env.test
+
+.PHONY: run test-server reset-db test test-xdist cov format lint fix check
+
 run:
 	uvicorn app.main:app --reload
 
 test-server:
-	DATABASE_URL=postgresql://postgres:example@localhost:5433/habit_tracker_test uvicorn app.main:app --reload
+	ENV_FILE=$(ENV_FILE) uvicorn app.main:app --reload
 
-test:
-	python -m scripts.reset_test_db
+reset-db:
+	ENV_FILE=$(ENV_FILE) python -m scripts.reset_test_db
+
+test: reset-db
 	pytest
 
-test-xdist:
-	python -m scripts.reset_test_db
+test-xdist: reset-db
 	pytest -n 4
 
-cov:
-	python -m scripts.reset_test_db
+cov: reset-db
 	pytest --cov=app --cov-report=term-missing
 
 format:
