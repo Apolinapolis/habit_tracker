@@ -1,0 +1,14 @@
+name: Habit tracker CI demo
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: actions/checkout
+      - run: astral-sh/setup-uv
+      - run: uv sync --locked
+      - run: ruff check
+      - run: pytest tests/unit
+      - name: Check out repository code
+      - run: echo "🍏 This job's status is ${{ job.status }}."
