@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
-from app.models.db_models import Base
 
 from app.config import settings
+from app.models.db_models import Base
 
 
 def reset_test_db():
