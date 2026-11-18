@@ -1,418 +1,211 @@
-# 🧠 Habit Tracker API
+# Habit Tracker API
 
-Backend-проект трекера привычек, созданный для практики **backend-разработки, API design, database integration, testing и production-oriented архитектуры**.
+[![CI](https://github.com/Apolinapolis/habit_tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/Apolinapolis/habit_tracker/actions/workflows/ci.yml)
 
-Проект развивается как учебный pet-project с постепенным усложнением архитектуры и инфраструктуры.
+A small REST API for tracking habits, built with FastAPI and PostgreSQL.
 
-## 🚀 Tech Stack
+This is a deliberately narrow learning project. The domain is simple on purpose: the focus is on
+engineering practice around it — test architecture, configuration, CI, and database handling —
+evolved in small, verified steps.
 
-* **Python 3.12+**
-* **FastAPI** — REST API
-* **Pydantic** — validation и DTO
-* **SQLAlchemy** — ORM
-* **PostgreSQL** — database
-* **Uvicorn** — ASGI server
-* **JWT** — authentication
-* **Passlib + bcrypt** — password hashing
-* **pytest** — testing
-* **pytest-cov** — test coverage
-* **pytest-xdist** — parallel test execution
-* **Ruff** — linting и formatting
-* **Docker Compose** — local PostgreSQL infrastructure
-* **uv** — Python dependency management
+## Tech Stack
 
-## 🏗 Architecture
+| Area | Tools |
+| --- | --- |
+| API | FastAPI, Pydantic v2, Uvicorn |
+| Database | PostgreSQL 16, SQLAlchemy |
+| Auth | JWT (python-jose), bcrypt via Passlib |
+| Configuration | pydantic-settings, per-environment `.env` files |
+| Testing | pytest, pytest-cov, pytest-xdist, pytest-env, requests |
+| Code quality | Ruff (lint + format) |
+| Tooling | uv (dependencies, Python version), Docker Compose, Make |
+| CI | GitHub Actions |
 
-Проект использует слоистую архитектуру:
+## Architecture
+
+Layered architecture with a single direction of dependencies:
 
 ```text
-HTTP Request
-     │
-     ▼
-┌───────────────┐
-│   API Layer   │  FastAPI routes
-└───────┬───────┘
-        │
-        ▼
-┌───────────────┐
-│ Service Layer │  Business logic
-└───────┬───────┘
-        │
-        ▼
-┌──────────────────┐
-│ Repository Layer │  Database access
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│   PostgreSQL     │
-└──────────────────┘
+HTTP request
+    │
+    ▼
+API layer          app/api/           FastAPI routes, request parsing
+    │
+    ▼
+Service layer      app/services/      business rules, ownership checks
+    │
+    ▼
+Repository layer   app/repositories/  database access
+    │
+    ▼
+PostgreSQL
 ```
 
-Дополнительные слои:
+Supporting modules:
 
-* **Schemas** — API request/response contracts
-* **Models** — SQLAlchemy database models
-* **Security** — password hashing и JWT
-* **Exceptions** — application-specific exceptions
+- `app/schemas/` — Pydantic request/response contracts
+- `app/models/` — SQLAlchemy models
+- `app/security.py` — password hashing and JWT
+- `app/config.py` — typed settings loaded from the environment
+- `app/exceptions.py` — domain exceptions mapped to HTTP responses in `app/main.py`
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 habit_tracker/
+├── .github/workflows/ci.yml   # CI pipeline
 ├── app/
-│   ├── api/                 # HTTP endpoints
-│   ├── models/              # Database models
-│   ├── repositories/        # Database access
-│   ├── schemas/             # Pydantic schemas / DTO
-│   ├── services/            # Business logic
-│   ├── auth_config.py       # Authentication configuration
-│   ├── db.py                # Database connection
-│   ├── exceptions.py        # Application exceptions
-│   ├── security.py          # JWT and password hashing
-│   └── main.py              # FastAPI application
-│
+│   ├── api/                   # HTTP endpoints
+│   ├── models/                # SQLAlchemy models
+│   ├── repositories/          # Database access
+│   ├── schemas/               # Pydantic schemas
+│   ├── services/              # Business logic
+│   ├── config.py              # Settings (pydantic-settings)
+│   ├── db.py                  # Engine and session factory
+│   ├── exceptions.py
+│   ├── security.py
+│   └── main.py                # FastAPI application
 ├── scripts/
-│   ├── create_tables.py     # Database initialization
-│   └── reset_test_db.py     # Test database reset
-│
+│   ├── create_tables.py
+│   └── reset_test_db.py       # Recreates the test DB (refuses to touch non-test URLs)
 ├── tests/
-│   ├── api/                 # API tests
-│   ├── clients/             # API test client
-│   ├── unit/                # Unit tests
-│   ├── conftest.py          # Pytest fixtures
-│   └── settings.py          # Test settings
-│
-├── docker-compose.yml        # Local PostgreSQL
-├── pyproject.toml            # Project/dependency/tool configuration
-├── uv.lock                   # Locked dependency versions
-├── pytest.ini                # Pytest configuration
-├── Makefile                  # Development commands
-└── .env / .env.test          # Local database configuration
+│   ├── unit/                  # Services and security, repositories mocked
+│   ├── integration/           # Repositories against real PostgreSQL
+│   ├── api/                   # End-to-end HTTP tests
+│   ├── clients/               # API client used by API tests
+│   └── conftest.py            # Fixtures and factories
+├── .env.example               # Configuration template
+├── .python-version            # Pinned Python version (3.12)
+├── docker-compose.yml         # Dev and test PostgreSQL
+├── Makefile
+├── pyproject.toml
+├── pytest.ini
+└── uv.lock                    # Locked dependency versions
 ```
 
-## ⚙️ Prerequisites
+## API
 
-Install:
+Interactive docs are available at `http://127.0.0.1:8000/docs` while the server is running.
 
-* Python 3.12+
-* Docker
-* Docker Compose
-* Git
+| Method | Path | Auth | Description |
+| --- | --- | :---: | --- |
+| `GET` | `/health` | | Health check |
+| `POST` | `/register` | | Create a user |
+| `POST` | `/login` | | Get a JWT access token (OAuth2 form) |
+| `GET` | `/me` | ✓ | Current user |
+| `POST` | `/habits` | ✓ | Create a habit |
+| `GET` | `/habits` | ✓ | List the current user's habits |
+| `GET` | `/habits/{habit_id}` | ✓ | Get a habit |
+| `PATCH` | `/habits/{habit_id}` | ✓ | Partially update a habit |
+| `DELETE` | `/habits/{habit_id}` | ✓ | Delete a habit |
 
-Check the installation:
+Users can only see and modify their own habits; another user's habit returns `404`.
 
-```bash
-python3.12 --version
-docker --version
-docker compose version
-git --version
-uv --version
-```
+## Getting Started
 
-## 📥 Installation
+### Prerequisites
 
-Clone the repository:
+- [uv](https://docs.astral.sh/uv/) — installs the pinned Python version automatically
+- Docker with Docker Compose
+- Git
+
+### Setup
 
 ```bash
 git clone git@github.com:Apolinapolis/habit_tracker.git
 cd habit_tracker
+
+uv sync                  # creates .venv with Python 3.12 and locked dependencies
+docker compose up -d     # PostgreSQL: dev on 5432, test on 5433
 ```
 
-Create the virtual environment and install dependencies:
+### Configuration
+
+Settings are read by `pydantic-settings`. The file is chosen by the `ENV_FILE` variable
+(default: `.env`); real environment variables take precedence over the file.
 
 ```bash
-uv sync
+cp .env.example .env         # development
+cp .env.example .env.test    # tests
 ```
 
-Activate the virtual environment:
+Fill in the values. For the Docker Compose databases:
+
+| File | `DATABASE_URL` |
+| --- | --- |
+| `.env` | `postgresql://postgres:example@localhost:5432/postgres` |
+| `.env.test` | `postgresql://postgres:example@localhost:5433/habit_tracker_test` |
+
+Generate `SECRET_KEY` with `openssl rand -hex 32`. All `.env*` files except `.env.example`
+are git-ignored.
+
+### Run
 
 ```bash
-source .venv/bin/activate
+uv run uvicorn app.main:app --reload
 ```
 
-Check that Python and Uvicorn are available:
+The API is served at `http://127.0.0.1:8000`.
+
+## Testing
+
+| Suite | Needs | Command |
+| --- | --- | --- |
+| Unit | nothing | `uv run pytest tests/unit` |
+| Integration | test PostgreSQL | `uv run pytest tests/integration` |
+| API | test PostgreSQL + running server | see below |
+
+API tests send real HTTP requests to `127.0.0.1:8000`, so the server must run against the test
+database in a separate terminal:
 
 ```bash
-python --version
-which python
-which uvicorn
-```
-
-`uv.lock` is committed to the repository, so `uv sync` installs the locked dependency versions.
-
-## 🔐 Environment Variables
-
-The project uses separate configuration for development and tests.
-
-### Development
-
-`.env`:
-
-```env
-DATABASE_URL=postgresql://postgres:example@localhost:5432/postgres
-```
-
-### Tests
-
-`.env.test`:
-
-```env
-DATABASE_URL=postgresql://postgres:example@localhost:5433/habit_tracker_test
-```
-
-Do **not** commit real credentials or secrets.
-
-## 🐘 PostgreSQL
-
-The project uses two PostgreSQL containers:
-
-| Environment | Host port | Database             |
-| ----------- | --------: | -------------------- |
-| Development |    `5432` | `postgres`           |
-| Tests       |    `5433` | `habit_tracker_test` |
-
-Start PostgreSQL:
-
-```bash
-docker compose up -d
-```
-
-Check containers:
-
-```bash
-docker compose ps
-```
-
-Stop containers:
-
-```bash
-docker compose down
-```
-
-The PostgreSQL data is persisted in Docker volumes.
-
-## ▶️ Run the Application
-
-Make sure the virtual environment is active:
-
-```bash
-source .venv/bin/activate
-```
-
-Start the application:
-
-```bash
-make run
-```
-
-Or directly:
-
-```bash
-uvicorn app.main:app --reload
-```
-
-The API will be available at:
-
-```text
-http://127.0.0.1:8000
-```
-
-FastAPI interactive documentation:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-## 🧪 Testing
-
-Start the test PostgreSQL container first:
-
-```bash
-docker compose up -d
-```
-
-Reset the test database and run the complete test suite:
-
-```bash
-make test
-```
-
-`make test` performs:
-
-```text
-reset test database
-        ↓
-pytest
-```
-
-### Test server
-
-To run the application against the test database:
-
-```bash
+# terminal 1
 make test-server
+
+# terminal 2
+make test        # recreates the test DB, then runs the full suite
+make cov         # same, with a coverage report
 ```
 
-This starts Uvicorn with:
+`make` targets call `uvicorn` and `pytest` directly, so activate the environment first
+(`source .venv/bin/activate`).
 
-```text
-postgresql://postgres:example@localhost:5433/habit_tracker_test
-```
+## Continuous Integration
 
-### Parallel tests
+GitHub Actions runs on every pull request and on every push to `main`:
+
+1. Install uv and the Python version from `.python-version`
+2. `uv sync --locked` — fails if `uv.lock` is out of date with `pyproject.toml`
+3. `ruff check .`
+4. Unit tests
+
+CI uses placeholder values for `DATABASE_URL` and `SECRET_KEY`: unit tests never connect to a
+database, so these are configuration, not secrets.
+
+## Code Quality
 
 ```bash
-make test-xdist
+make format   # ruff format
+make lint     # ruff check
+make fix      # ruff check --fix
 ```
 
-### Coverage
+## Known Limitations
 
-```bash
-make cov
-```
+Tracked openly and fixed one at a time:
 
-Coverage report is generated in the terminal.
+- Repositories create their own database sessions, so there are no request-level transactions
+  and integration tests clean tables instead of rolling back.
+- Test cleanup helpers live in production repository modules.
+- Models use the SQLAlchemy 1.x `Column` style; no migrations yet (`create_all` only).
+- API tests require a running server instead of an in-process client, so they are not in CI yet.
+- `make test-xdist` is unreliable: table cleanup between tests conflicts across workers.
 
-Example:
+## Roadmap
 
-```text
-TOTAL    295    81    73%
-```
-
-Current test suite:
-
-```text
-59 passed
-```
-
-## 🧹 Code Quality
-
-Format the project:
-
-```bash
-make format
-```
-
-Run Ruff:
-
-```bash
-make lint
-```
-
-Automatically fix supported Ruff issues:
-
-```bash
-make fix
-```
-
-Run the main quality checks:
-
-```bash
-make check
-```
-
-Equivalent to:
-
-```text
-ruff check .
-pytest
-```
-
-## 🛠 Useful Make Commands
-
-| Command            | Description                      |
-| ------------------ | -------------------------------- |
-| `make run`         | Start development server         |
-| `make test-server` | Start server using test database |
-| `make test`        | Reset test DB and run tests      |
-| `make test-xdist`  | Run tests in parallel            |
-| `make cov`         | Run tests with coverage          |
-| `make format`      | Format code with Ruff            |
-| `make lint`        | Run Ruff linting                 |
-| `make fix`         | Automatically fix Ruff issues    |
-| `make check`       | Run linting and tests            |
-
-## 🔑 Authentication
-
-The API uses JWT-based authentication.
-
-Basic flow:
-
-```text
-POST /register
-      │
-      ▼
-create user
-      │
-      ▼
-POST /login
-      │
-      ▼
-JWT access token
-      │
-      ▼
-Authorization: Bearer <token>
-      │
-      ▼
-protected endpoints
-```
-
-Passwords are hashed before being stored in the database.
-
-## 📡 Main API Areas
-
-### Authentication
-
-```text
-POST /register
-POST /login
-```
-
-### Habits
-
-```text
-POST   /habits
-GET    /habits
-GET    /habits/{habit_id}
-PATCH  /habits/{habit_id}
-DELETE /habits/{habit_id}
-```
-
-The API also implements ownership isolation: a user cannot access or modify another user's habits.
-
-## 🧪 Testing Strategy
-
-The project currently contains:
-
-* unit tests for business logic;
-* API tests;
-* authentication tests;
-* validation tests;
-* ownership/authorization tests;
-* negative/error scenarios.
-
-The current focus is on maintaining high coverage of critical business logic while gradually introducing more integration testing against PostgreSQL.
-
-Coverage should be treated as a **quality indicator**, not as the primary development goal.
-
-## 🎯 Development Roadmap
-
-The project is intentionally developed incrementally.
-
-Current/future areas:
-
-* [ ] Improve database/migration infrastructure
-* [ ] Integration tests for repositories
-* [ ] Improve database transaction handling
-* [ ] Pagination
-* [ ] Habit completion/history
-* [ ] Statistics
-* [ ] Redis caching
-* [ ] Background tasks
-* [ ] Kafka/event-driven architecture
-* [ ] Load testing
-* [ ] Production Docker setup
-* [ ] CI/CD
-* [ ] Observability
-* [ ] System design improvements
+- [x] Typed configuration and secrets handling
+- [x] CI: lint and unit tests on GitHub Actions
+- [ ] CI: integration and API tests (PostgreSQL service container, in-process client)
+- [ ] Request-scoped database sessions and Alembic migrations
+- [ ] Habit completions: dates, time zones, streaks, aggregation, indexes, pagination
+- [ ] Docker image, Testcontainers, load testing
